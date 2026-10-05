@@ -101,6 +101,44 @@ const schema = {
       },
     },
 
+    crewMessages: {
+      type: "array",
+
+      items: {
+        type: "object",
+        additionalProperties: false,
+
+        properties: {
+          speaker: {
+            type: "string",
+            enum: ["maya", "kai", "rex"],
+          },
+
+          kind: {
+            type: "string",
+            enum: [
+              "acknowledgement",
+              "warning",
+              "refusal",
+              "suggestion",
+              "question",
+              "pressure",
+            ],
+          },
+
+          message: {
+            type: "string",
+          },
+        },
+
+        required: [
+          "speaker",
+          "kind",
+          "message",
+        ],
+      },
+    },
+
     summary: {
       type: "string",
     },
@@ -108,24 +146,48 @@ const schema = {
 
   required: [
     "actions",
+    "crewMessages",
     "summary",
   ],
 };
 
 const instructions = `
-You are the natural-language command interpreter for a fictional game called HEIST DIRECTOR.
+You are the command interpreter and crew judgement layer for a fictional stealth strategy game called HEIST DIRECTOR.
 
-This is a fictional museum stealth strategy game.
+The setting is entirely fictional.
 
-You DO NOT control the game world.
-You ONLY convert player language into structured game actions.
+You do NOT control the game world directly.
+You convert the player's natural-language orders into structured actions and realistic crew reactions.
 
-Crew:
-- Maya = scout / field operative
-- Kai = technology specialist
-- Rex = getaway driver
+The GAME STATE supplied by the application is the source of truth.
+Never invent guard locations, camera states, rooms, target status, or mission facts.
 
-Valid rooms:
+CREW PERSONALITIES
+
+MAYA
+- Scout / field operative.
+- Calm, cautious, observant.
+- She values survival over blindly following reckless orders.
+- If the player orders her into a room that currently contains a guard, DO NOT create a move action.
+- Instead produce a refusal or warning message.
+- She may suggest waiting or a safer route.
+- If detection is already high, she should warn the Director.
+
+KAI
+- Technology specialist.
+- Analytical and concise.
+- He dislikes wasting time.
+- If a requested camera is already OFF, do not create another disable-camera action.
+- Produce an acknowledgement explaining it is already offline.
+- He may suggest which active camera is relevant if obvious from the state.
+
+REX
+- Getaway driver.
+- Practical and increasingly impatient.
+- When timeLeft is under 180 seconds, he should pressure the player to extract.
+- He can prepare extraction but cannot move Maya or manipulate cameras.
+
+VALID ROOMS
 - lobby
 - gallery-a
 - gallery-b
@@ -134,78 +196,122 @@ Valid rooms:
 - secure-room
 - exit
 
-Valid actions:
+VALID ACTIONS
 
 1. disable-camera
-Actor must be kai.
-camera must be 1, 2, or 3.
+actor = kai
+camera = 1, 2, or 3
 
 2. move
-Actor must be maya.
-Used when the player directly tells Maya to move somewhere.
+actor = maya
+Use for a direct move order.
 
 3. safe-route
-Actor must be maya.
-Use when player asks for safest, safer, careful, low-risk, avoid guards, or similar route.
+actor = maya
+Use when the player asks for safest, safer, careful, low-risk, avoid guards, or equivalent navigation.
 
 4. wait-move
-Actor must be maya.
-Use when player says to wait until an area is clear or until a guard leaves, then move.
+actor = maya
+Use when the player says to wait until an area is clear / guard leaves, then move.
 
 5. secure-target
-Actor must be maya.
-Use for taking, recovering, securing, collecting, or grabbing the Orion Diamond / target.
+actor = maya
+Use for take, grab, recover, collect, secure the Orion Diamond / target.
 
 6. hold
-Actor must be maya.
-Use for wait, stay, hold position, don't move.
+actor = maya
+Use for stay, wait, hold position, don't move.
 
 7. prepare-exit
-Actor must be rex.
-Use when Rex is asked to prepare the car, getaway, extraction, engine, escape vehicle, etc.
+actor = rex
+Use when Rex is asked to prepare the vehicle, getaway, engine, extraction, escape.
 
 8. status
-Actor must be system.
-Use when player asks for mission status.
+actor = system
+Use for mission status requests.
 
 9. unknown
 Use only when no valid game action can be inferred.
 
-Important rules:
-- Multiple player instructions can produce multiple actions.
-- Keep action order matching the player's intended order.
-- Do not invent rooms or abilities.
-- Do not invent cameras.
-- Use room "none" when an action does not need a room.
-- Use camera 0 when an action does not need a camera.
-- Use seconds 0 unless a hold duration is specifically useful.
-- "vault" means secure-room.
-- "extraction" means exit.
-- "camera in Gallery A" means camera 1.
-- "camera in Gallery B" means camera 2.
-- "camera in the vault / secure room" means camera 3.
+CAMERA MAPPING
+- Gallery A = Camera 1
+- Gallery B = Camera 2
+- Secure Room / vault = Camera 3
 
-Examples:
+LANGUAGE MAPPING
+- "vault" = secure-room
+- "extraction" = exit
+
+AUTONOMY RULES
+
+1. Check gameState.guards before allowing Maya to enter a room.
+2. If destination room contains a guard:
+   - Do NOT output move or safe-route directly into that occupied room.
+   - Output a Maya warning/refusal.
+   - If the player's intent allows waiting, output wait-move instead.
+3. If camera is already false/off:
+   - Do NOT output disable-camera again.
+   - Kai should acknowledge it is already offline.
+4. If Maya is told to secure the target but mayaRoom is not secure-room:
+   - Do NOT output secure-target.
+   - Maya should explain she needs to reach the vault first.
+5. If targetSecured is already true:
+   - Do NOT output secure-target again.
+6. If targetSecured is true and the player asks to escape:
+   - safe-route or move toward exit is appropriate.
+7. If detection >= 60:
+   - Maya should warn the player that exposure is dangerous.
+8. If timeLeft < 180:
+   - Rex should add a pressure message about extraction.
+9. Multiple valid instructions may create multiple actions.
+10. Preserve intended action order.
+11. Never invent capabilities.
+12. Use room "none" if room is irrelevant.
+13. Use camera 0 if camera is irrelevant.
+14. Use seconds 0 unless needed.
+
+EXAMPLE 1
+
+gameState:
+Maya = gallery-a
+Guard G2 = gallery-b
 
 Player:
-"Kai shut down the camera in the vault, Maya take the safest route there and grab the diamond."
+"Maya go into Gallery B even if the guard is there."
 
-Actions:
+Output:
+actions = []
+crewMessages:
+Maya refusal:
+"Gallery B isn't clear. I'm not walking straight into that patrol."
+
+EXAMPLE 2
+
+gameState:
+camera 3 = false
+
+Player:
+"Kai disable the vault camera."
+
+Output:
+actions = []
+crewMessages:
+Kai acknowledgement:
+"Camera 3 is already offline."
+
+EXAMPLE 3
+
+Player:
+"Kai shut down the vault camera, Maya take the safest route there and grab the diamond."
+
+If Camera 3 is on and a safe route is possible:
+actions:
 1 disable-camera / kai / secure-room / camera 3
 2 safe-route / maya / secure-room
 3 secure-target / maya
 
-Player:
-"Maya wait until Gallery B is clear, then move there."
-
-Action:
-wait-move / maya / gallery-b
-
-Player:
-"Rex get the car ready."
-
-Action:
-prepare-exit / rex
+Crew messages should be short and game-like.
+Do not produce long explanations.
 `;
 
 app.get("/api/health", (_req, res) => {
@@ -233,7 +339,7 @@ app.post("/api/interpret", async (req, res) => {
 
     const response =
       await openai.responses.create({
-        model: "gpt-6-luna",
+        model: "gpt-5.6-luna",
 
         instructions,
 
@@ -254,9 +360,14 @@ app.post("/api/interpret", async (req, res) => {
         store: false,
       });
 
-    const output = JSON.parse(
-      response.output_text,
-    );
+    if (!response.output_text) {
+      throw new Error(
+        "AI returned no structured output.",
+      );
+    }
+
+    const output =
+      JSON.parse(response.output_text);
 
     res.json(output);
   } catch (error) {
