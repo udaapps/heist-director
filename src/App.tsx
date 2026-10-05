@@ -40,15 +40,9 @@ type AIAction = {
     | "status"
     | "unknown";
 
-  actor:
-    | "maya"
-    | "kai"
-    | "rex"
-    | "system";
+  actor: "maya" | "kai" | "rex" | "system";
 
-  room:
-    | Room
-    | "none";
+  room: Room | "none";
 
   camera: number;
   seconds: number;
@@ -70,10 +64,7 @@ const roomNames: Record<Room, string> = {
 };
 
 const roomConnections: Record<Room, Room[]> = {
-  lobby: [
-    "gallery-a",
-    "control-room",
-  ],
+  lobby: ["gallery-a", "control-room"],
 
   "gallery-a": [
     "lobby",
@@ -110,9 +101,7 @@ const roomConnections: Record<Room, Room[]> = {
   exit: ["corridor"],
 };
 
-const cameraMap: Partial<
-  Record<Room, CameraId>
-> = {
+const cameraMap: Partial<Record<Room, CameraId>> = {
   "gallery-a": 1,
   "gallery-b": 2,
   "secure-room": 3,
@@ -146,8 +135,7 @@ const initialFeed: FeedItem[] = [
 ];
 
 function App() {
-  const [command, setCommand] =
-    useState("");
+  const [command, setCommand] = useState("");
 
   const [feed, setFeed] =
     useState<FeedItem[]>(initialFeed);
@@ -173,8 +161,8 @@ function App() {
       3: true,
     });
 
-  const [alert, setAlert] =
-    useState(18);
+  const [alert, setAlert] = useState(18);
+  const [detection, setDetection] = useState(0);
 
   const [timeLeft, setTimeLeft] =
     useState(900);
@@ -184,16 +172,11 @@ function App() {
     setTargetSecured,
   ] = useState(false);
 
-  const [
-    gameStatus,
-    setGameStatus,
-  ] =
+  const [gameStatus, setGameStatus] =
     useState<GameStatus>("active");
 
-  const [
-    missionRun,
-    setMissionRun,
-  ] = useState(0);
+  const [missionRun, setMissionRun] =
+    useState(0);
 
   const [
     interpreting,
@@ -214,6 +197,12 @@ function App() {
 
   const targetSecuredRef =
     useRef(false);
+
+  const detectionRef =
+    useRef(0);
+
+  const threatGuardRef =
+    useRef<GuardName | null>(null);
 
   useEffect(() => {
     mayaRoomRef.current =
@@ -247,9 +236,7 @@ function App() {
     setFeed((current) => [
       ...current,
       {
-        id:
-          Date.now() +
-          Math.random(),
+        id: Date.now() + Math.random(),
         speaker,
         message,
       },
@@ -257,14 +244,9 @@ function App() {
   }
 
   function sleep(ms: number) {
-    return new Promise<void>(
-      (resolve) => {
-        window.setTimeout(
-          resolve,
-          ms,
-        );
-      },
-    );
+    return new Promise<void>((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
   }
 
   // =========================
@@ -272,67 +254,47 @@ function App() {
   // =========================
 
   useEffect(() => {
-    if (
-      gameStatus !== "active"
-    ) {
-      return;
-    }
+    if (gameStatus !== "active") return;
 
     const timer =
       window.setInterval(() => {
-        setTimeLeft(
-          (current) => {
-            if (current <= 1) {
-              window.clearInterval(
-                timer,
-              );
+        setTimeLeft((current) => {
+          if (current <= 1) {
+            window.clearInterval(timer);
 
-              gameStatusRef.current =
-                "lost";
+            gameStatusRef.current =
+              "lost";
 
-              setGameStatus("lost");
+            setGameStatus("lost");
 
-              setFeed(
-                (oldFeed) => [
-                  ...oldFeed,
-                  {
-                    id: Date.now(),
-                    speaker:
-                      "SYSTEM",
-                    message:
-                      "Mission failed. Time expired.",
-                  },
-                ],
-              );
+            setFeed((oldFeed) => [
+              ...oldFeed,
+              {
+                id: Date.now(),
+                speaker: "SYSTEM",
+                message:
+                  "Mission failed. Time expired.",
+              },
+            ]);
 
-              return 0;
-            }
+            return 0;
+          }
 
-            return current - 1;
-          },
-        );
+          return current - 1;
+        });
       }, 1000);
 
     return () => {
       window.clearInterval(timer);
     };
-  }, [
-    gameStatus,
-    missionRun,
-  ]);
+  }, [gameStatus, missionRun]);
 
   // =========================
-  // GUARD PATROL
-  // TEST MODE:
-  // guards mostly frozen
+  // LIVE GUARD PATROL
   // =========================
 
   useEffect(() => {
-    if (
-      gameStatus !== "active"
-    ) {
-      return;
-    }
+    if (gameStatus !== "active") return;
 
     const paths: Record<
       GuardName,
@@ -384,82 +346,150 @@ function App() {
           Object.keys(
             paths,
           ) as GuardName[]
-        ).forEach(
-          (guard) => {
-            indexes[guard] =
-              (indexes[guard] +
-                1) %
-              paths[guard]
-                .length;
+        ).forEach((guard) => {
+          indexes[guard] =
+            (indexes[guard] + 1) %
+            paths[guard].length;
 
-            next[guard] =
-              paths[guard][
-                indexes[guard]
-              ];
-          },
-        );
+          next[guard] =
+            paths[guard][
+              indexes[guard]
+            ];
+        });
 
         guardRoomsRef.current =
           next;
 
         setGuardRooms(next);
-
-        const caughtGuard = (
-          Object.entries(
-            next,
-          ) as [
-            GuardName,
-            Room,
-          ][]
-        ).find(
-          ([, room]) =>
-            room ===
-            mayaRoomRef.current,
-        );
-
-        if (caughtGuard) {
-          const [guardName] =
-            caughtGuard;
-
-          gameStatusRef.current =
-            "lost";
-
-          setAlert(100);
-
-          setGameStatus("lost");
-
-          setFeed(
-            (current) => [
-              ...current,
-              {
-                id: Date.now(),
-                speaker:
-                  "SYSTEM",
-                message: `${guardName.toUpperCase()} entered ${
-                  roomNames[
-                    mayaRoomRef
-                      .current
-                  ]
-                }. Maya has been caught.`,
-              },
-            ],
-          );
-
-          window.clearInterval(
-            interval,
-          );
-        }
-      }, 3600000);
+      }, 6000);
 
     return () => {
-      window.clearInterval(
-        interval,
-      );
+      window.clearInterval(interval);
     };
-  }, [
-    gameStatus,
-    missionRun,
-  ]);
+  }, [gameStatus, missionRun]);
+
+  // =========================
+  // DETECTION SYSTEM
+  // =========================
+
+  useEffect(() => {
+    if (gameStatus !== "active") return;
+
+    const interval =
+      window.setInterval(() => {
+        if (
+          gameStatusRef.current !==
+          "active"
+        ) {
+          return;
+        }
+
+        const mayaRoom =
+          mayaRoomRef.current;
+
+        const guardEntry = (
+          Object.entries(
+            guardRoomsRef.current,
+          ) as [GuardName, Room][]
+        ).find(
+          ([, room]) =>
+            room === mayaRoom,
+        );
+
+        if (guardEntry) {
+          const [guardName] =
+            guardEntry;
+
+          if (
+            threatGuardRef.current !==
+            guardName
+          ) {
+            threatGuardRef.current =
+              guardName;
+
+            addFeed(
+              "Maya",
+              `${guardName.toUpperCase()} has eyes on me in ${roomNames[mayaRoom]}. I need to move!`,
+            );
+
+            addFeed(
+              "SYSTEM",
+              "Detection rising. Move Maya out of the room before it reaches 100%.",
+            );
+          }
+
+          const nextDetection =
+            Math.min(
+              100,
+              detectionRef.current + 10,
+            );
+
+          detectionRef.current =
+            nextDetection;
+
+          setDetection(
+            nextDetection,
+          );
+
+          if (
+            nextDetection >= 100
+          ) {
+            gameStatusRef.current =
+              "lost";
+
+            setAlert(100);
+            setGameStatus("lost");
+
+            addFeed(
+              "SYSTEM",
+              `${guardName.toUpperCase()} identified Maya. Mission compromised.`,
+            );
+
+            window.clearInterval(
+              interval,
+            );
+          }
+        } else {
+          if (
+            detectionRef.current > 0
+          ) {
+            const nextDetection =
+              Math.max(
+                0,
+                detectionRef.current -
+                  12,
+              );
+
+            detectionRef.current =
+              nextDetection;
+
+            setDetection(
+              nextDetection,
+            );
+
+            if (
+              nextDetection === 0 &&
+              threatGuardRef.current
+            ) {
+              addFeed(
+                "Maya",
+                "I broke line of sight. I'm clear again.",
+              );
+
+              threatGuardRef.current =
+                null;
+            }
+          } else {
+            threatGuardRef.current =
+              null;
+          }
+        }
+      }, 500);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [gameStatus, missionRun]);
 
   // =========================
   // ALERT FAILURE
@@ -483,9 +513,7 @@ function App() {
   // SAFE PATH
   // =========================
 
-  function roomCost(
-    room: Room,
-  ) {
+  function roomCost(room: Room) {
     const guardThere =
       Object.values(
         guardRoomsRef.current,
@@ -639,9 +667,7 @@ function App() {
 
     if (
       destination !== start &&
-      !previous.has(
-        destination,
-      )
+      !previous.has(destination)
     ) {
       return null;
     }
@@ -664,7 +690,6 @@ function App() {
       }
 
       path.unshift(prev);
-
       cursor = prev;
     }
 
@@ -734,7 +759,7 @@ function App() {
   }
 
   // =========================
-  // MOVE MAYA
+  // MOVE MAYA ONE STEP
   // =========================
 
   function moveMayaOneStep(
@@ -784,7 +809,7 @@ function App() {
     if (guardThere) {
       addFeed(
         "Maya",
-        `${roomNames[destination]} isn't clear. I'm holding.`,
+        `${roomNames[destination]} isn't clear. A guard is there.`,
       );
 
       return false;
@@ -829,8 +854,7 @@ function App() {
     }
 
     if (
-      destination ===
-        "exit" &&
+      destination === "exit" &&
       targetSecuredRef.current
     ) {
       gameStatusRef.current =
@@ -1069,7 +1093,7 @@ function App() {
                 targetSecuredRef.current,
 
               alert,
-
+              detection,
               timeLeft,
             },
           }),
@@ -1113,11 +1137,6 @@ function App() {
           disableCamera(
             action.camera,
           );
-        } else {
-          addFeed(
-            "SYSTEM",
-            "Kai needs a valid camera target.",
-          );
         }
 
         break;
@@ -1125,8 +1144,7 @@ function App() {
 
       case "move": {
         if (
-          action.room !==
-          "none"
+          action.room !== "none"
         ) {
           moveMayaOneStep(
             action.room,
@@ -1138,8 +1156,7 @@ function App() {
 
       case "safe-route": {
         if (
-          action.room !==
-          "none"
+          action.room !== "none"
         ) {
           await followSafeRoute(
             action.room,
@@ -1151,8 +1168,7 @@ function App() {
 
       case "wait-move": {
         if (
-          action.room ===
-          "none"
+          action.room === "none"
         ) {
           break;
         }
@@ -1187,8 +1203,7 @@ function App() {
           Math.max(
             1,
             Math.min(
-              action.seconds ||
-                3,
+              action.seconds || 3,
               10,
             ),
           );
@@ -1227,7 +1242,7 @@ function App() {
       case "status": {
         addFeed(
           "SYSTEM",
-          `Alert ${alert}%. Target ${
+          `Alert ${alert}%. Detection ${detectionRef.current}%. Target ${
             targetSecuredRef.current
               ? "secured"
               : "not secured"
@@ -1282,11 +1297,6 @@ function App() {
       gameStatusRef.current !==
       "active"
     ) {
-      addFeed(
-        "SYSTEM",
-        "Mission has ended. Restart to play again.",
-      );
-
       return;
     }
 
@@ -1306,16 +1316,6 @@ function App() {
       addFeed(
         "AI",
         result.summary,
-      );
-
-      addFeed(
-        "SYSTEM",
-        `${result.actions.length} AI action${
-          result.actions.length ===
-          1
-            ? ""
-            : "s"
-        } received.`,
       );
 
       for (
@@ -1353,7 +1353,6 @@ function App() {
 
   function restartMission() {
     setCommand("");
-
     setFeed(initialFeed);
 
     mayaRoomRef.current =
@@ -1400,15 +1399,19 @@ function App() {
 
     setTargetSecured(false);
 
+    detectionRef.current = 0;
+    setDetection(0);
+
+    threatGuardRef.current =
+      null;
+
     gameStatusRef.current =
       "active";
 
     setGameStatus("active");
 
     setAlert(18);
-
     setTimeLeft(900);
-
     setInterpreting(false);
 
     setMissionRun(
@@ -1435,10 +1438,7 @@ function App() {
       "0",
     )}:${String(
       remaining,
-    ).padStart(
-      2,
-      "0",
-    )}`;
+    ).padStart(2, "0")}`;
   }
 
   // =========================
@@ -1505,47 +1505,38 @@ function App() {
 
   return (
     <main className="app-shell">
-      {gameStatus !==
-        "active" && (
+      {gameStatus !== "active" && (
         <div className="mission-overlay">
           <div
             className={`mission-result ${
-              gameStatus ===
-              "won"
+              gameStatus === "won"
                 ? "mission-win"
                 : "mission-loss"
             }`}
           >
             <span className="result-label">
-              {gameStatus ===
-              "won"
+              {gameStatus === "won"
                 ? "OPERATION SUCCESS"
                 : "OPERATION FAILED"}
             </span>
 
             <h2>
-              {gameStatus ===
-              "won"
+              {gameStatus === "won"
                 ? "ORION DIAMOND RECOVERED"
                 : "MISSION COMPROMISED"}
             </h2>
 
             <p>
-              {gameStatus ===
-              "won"
+              {gameStatus === "won"
                 ? `Extraction complete with ${formatTime(
                     timeLeft,
                   )} remaining and ${alert}% alert.`
-                : targetSecured
-                  ? "The target was secured, but the crew failed to extract."
-                  : "Maya was caught or museum security compromised the mission."}
+                : "Maya was identified by security or the mission was compromised."}
             </p>
 
             <div className="result-stats">
               <div>
-                <span>
-                  TARGET
-                </span>
+                <span>TARGET</span>
 
                 <strong>
                   {targetSecured
@@ -1555,19 +1546,14 @@ function App() {
               </div>
 
               <div>
-                <span>
-                  ALERT
-                </span>
-
+                <span>ALERT</span>
                 <strong>
                   {alert}%
                 </strong>
               </div>
 
               <div>
-                <span>
-                  TIME
-                </span>
+                <span>TIME</span>
 
                 <strong>
                   {formatTime(
@@ -1600,8 +1586,7 @@ function App() {
             </h1>
 
             <p>
-              Operation:
-              Silent Gallery
+              Operation: Silent Gallery
             </p>
           </div>
         </div>
@@ -1629,9 +1614,7 @@ function App() {
           </div>
 
           <div className="stat">
-            <span>
-              ALERT
-            </span>
+            <span>ALERT</span>
 
             <strong className="alert-value">
               {alert}%
@@ -1640,8 +1623,22 @@ function App() {
 
           <div className="stat">
             <span>
-              TARGET
+              DETECTION
             </span>
+
+            <strong
+              className={
+                detection > 0
+                  ? "detection-value danger"
+                  : "detection-value"
+              }
+            >
+              {detection}%
+            </strong>
+          </div>
+
+          <div className="stat">
+            <span>TARGET</span>
 
             <strong
               style={{
@@ -1662,9 +1659,7 @@ function App() {
       <section className="game-grid">
         <aside className="panel crew-panel">
           <div className="panel-heading">
-            <span>
-              CREW
-            </span>
+            <span>CREW</span>
 
             <span className="online">
               3 ONLINE
@@ -1692,8 +1687,7 @@ function App() {
                   At{" "}
                   {
                     roomNames[
-                      crewRooms
-                        .maya
+                      crewRooms.maya
                     ]
                   }
                 </p>
@@ -1716,9 +1710,7 @@ function App() {
                     Kai
                   </strong>
 
-                  <span>
-                    Tech
-                  </span>
+                  <span>Tech</span>
                 </div>
 
                 <p>
@@ -1770,9 +1762,11 @@ function App() {
             </strong>
 
             <p>
-              Give the crew natural-language orders.
-              AI interprets your intent and the game
-              engine controls what actually happens.
+              Guards now patrol live.
+              If a guard spots Maya,
+              detection rises. Break line
+              of sight before it reaches
+              100%.
             </p>
           </div>
         </aside>
@@ -1786,29 +1780,53 @@ function App() {
             <span>
               {interpreting
                 ? "AI INTERPRETING"
-                : gameStatus ===
-                    "active"
-                  ? "LIVE FEED"
+                : detection > 0
+                  ? "⚠ SECURITY WATCH"
                   : gameStatus ===
-                      "won"
-                    ? "MISSION COMPLETE"
-                    : "MISSION FAILED"}
+                      "active"
+                    ? "LIVE FEED"
+                    : gameStatus ===
+                        "won"
+                      ? "MISSION COMPLETE"
+                      : "MISSION FAILED"}
             </span>
           </div>
 
-          <div className="museum-map">
+          <div
+            className={`museum-map ${
+              detection > 0
+                ? "danger-state"
+                : ""
+            }`}
+          >
+            <div className="detection-meter">
+              <div className="detection-meter-label">
+                <span>
+                  SECURITY DETECTION
+                </span>
+
+                <strong>
+                  {detection}%
+                </strong>
+              </div>
+
+              <div className="detection-track">
+                <div
+                  className="detection-fill"
+                  style={{
+                    width: `${detection}%`,
+                  }}
+                />
+              </div>
+            </div>
+
             <div className="room lobby">
               <span className="room-label">
                 LOBBY
               </span>
 
-              {renderCrew(
-                "lobby",
-              )}
-
-              {renderGuards(
-                "lobby",
-              )}
+              {renderCrew("lobby")}
+              {renderGuards("lobby")}
             </div>
 
             <div className="room gallery-a">
@@ -1934,13 +1952,8 @@ function App() {
                 EXIT
               </span>
 
-              {renderCrew(
-                "exit",
-              )}
-
-              {renderGuards(
-                "exit",
-              )}
+              {renderCrew("exit")}
+              {renderGuards("exit")}
             </div>
 
             <div className="map-legend">
@@ -1968,39 +1981,29 @@ function App() {
               RADIO / EVENTS
             </span>
 
-            <span>
-              LIVE
-            </span>
+            <span>LIVE</span>
           </div>
 
           <div className="event-feed">
-            {feed.map(
-              (item) => (
-                <div
-                  className={`feed-item ${
-                    item.speaker ===
-                    "DIRECTOR"
-                      ? "director-message"
-                      : ""
-                  }`}
-                  key={
-                    item.id
-                  }
-                >
-                  <span>
-                    {
-                      item.speaker
-                    }
-                  </span>
+            {feed.map((item) => (
+              <div
+                className={`feed-item ${
+                  item.speaker ===
+                  "DIRECTOR"
+                    ? "director-message"
+                    : ""
+                }`}
+                key={item.id}
+              >
+                <span>
+                  {item.speaker}
+                </span>
 
-                  <p>
-                    {
-                      item.message
-                    }
-                  </p>
-                </div>
-              ),
-            )}
+                <p>
+                  {item.message}
+                </p>
+              </div>
+            ))}
           </div>
         </aside>
       </section>
@@ -2020,9 +2023,7 @@ function App() {
 
         <form
           className="command-form"
-          onSubmit={
-            sendCommand
-          }
+          onSubmit={sendCommand}
         >
           <span className="prompt-symbol">
             &gt;
@@ -2030,15 +2031,10 @@ function App() {
 
           <input
             value={command}
-            disabled={
-              interpreting
-            }
-            onChange={(
-              event,
-            ) =>
+            disabled={interpreting}
+            onChange={(event) =>
               setCommand(
-                event.target
-                  .value,
+                event.target.value,
               )
             }
             placeholder="Tell the crew what you want in your own words..."
@@ -2046,9 +2042,7 @@ function App() {
 
           <button
             type="submit"
-            disabled={
-              interpreting
-            }
+            disabled={interpreting}
           >
             {interpreting
               ? "THINKING..."
@@ -2060,17 +2054,23 @@ function App() {
           Try:
 
           <span>
-            Kai shut off the vault camera,
-            Maya take the safest route there
-            and grab the diamond
+            Maya take the safest
+            route to the vault
           </span>
 
           <span>
-            Rex get the getaway car ready
+            Kai shut down the
+            vault camera
           </span>
 
           <span>
-            Maya get us out using the safest route
+            Maya hold position
+            until the guard moves
+          </span>
+
+          <span>
+            Maya get us out using
+            the safest route
           </span>
         </div>
       </section>

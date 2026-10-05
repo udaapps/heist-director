@@ -4,18 +4,29 @@
 
 :root {
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", sans-serif;
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 
   color: #e9f1f7;
   background: #070b10;
 }
 
-body {
-  margin: 0;
+html,
+body,
+#root {
+  width: 100%;
   min-width: 320px;
   min-height: 100vh;
+  margin: 0;
+}
 
+body {
+  display: block;
   background:
     radial-gradient(
       circle at top,
@@ -34,15 +45,17 @@ button {
   cursor: pointer;
 }
 
-#root {
-  width: 100%;
-  min-height: 100vh;
-}
+/* =========================
+   APP
+========================= */
 
 .app-shell {
   width: 100%;
   min-height: 100vh;
   padding: 18px;
+
+  color: #e9f1f7;
+  text-align: left;
 
   background:
     linear-gradient(
@@ -63,7 +76,9 @@ button {
 
 .top-bar {
   min-height: 88px;
+
   border: 1px solid #22303b;
+
   background: rgba(10, 17, 23, 0.95);
 
   display: flex;
@@ -72,7 +87,8 @@ button {
 
   padding: 14px 18px;
 
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.3);
 }
 
 .brand {
@@ -89,9 +105,11 @@ button {
   place-items: center;
 
   border: 1px solid #52d6c8;
+
   color: #52d6c8;
 
-  background: rgba(82, 214, 200, 0.08);
+  background:
+    rgba(82, 214, 200, 0.08);
 
   font-weight: 800;
   letter-spacing: 1px;
@@ -100,10 +118,10 @@ button {
 .brand h1 {
   margin: 0;
 
+  color: #f4f7f9;
+
   font-size: 1.15rem;
   letter-spacing: 0.16em;
-
-  color: #f4f7f9;
 }
 
 .brand p {
@@ -113,7 +131,35 @@ button {
 
   font-size: 0.78rem;
   letter-spacing: 0.08em;
+
   text-transform: uppercase;
+}
+
+.top-restart-button {
+  margin-left: auto;
+  margin-right: 14px;
+
+  height: 38px;
+
+  padding: 0 16px;
+
+  border: 1px solid #3c6467;
+
+  background:
+    rgba(82, 214, 200, 0.06);
+
+  color: #7edfd5;
+
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.top-restart-button:hover {
+  background:
+    rgba(82, 214, 200, 0.14);
+
+  border-color: #55d5c6;
 }
 
 .mission-stats {
@@ -122,11 +168,12 @@ button {
 }
 
 .stat {
-  min-width: 125px;
+  min-width: 118px;
 
-  padding: 7px 17px;
+  padding: 7px 15px;
 
-  border-left: 1px solid #26343e;
+  border-left:
+    1px solid #26343e;
 
   display: flex;
   flex-direction: column;
@@ -139,6 +186,7 @@ button {
   color: #617480;
 
   font-size: 0.63rem;
+
   letter-spacing: 0.14em;
 }
 
@@ -146,6 +194,7 @@ button {
   color: #dce8ed;
 
   font-size: 0.82rem;
+
   letter-spacing: 0.05em;
 }
 
@@ -173,9 +222,11 @@ button {
 }
 
 .panel {
-  border: 1px solid #22303b;
+  border:
+    1px solid #22303b;
 
-  background: rgba(9, 15, 21, 0.94);
+  background:
+    rgba(9, 15, 21, 0.94);
 
   overflow: hidden;
 }
@@ -185,7 +236,8 @@ button {
 
   padding: 0 14px;
 
-  border-bottom: 1px solid #22303b;
+  border-bottom:
+    1px solid #22303b;
 
   background: #0c141b;
 
@@ -202,7 +254,7 @@ button {
 }
 
 /* =========================
-   CREW
+   CREW PANEL
 ========================= */
 
 .online {
@@ -219,13 +271,15 @@ button {
 }
 
 .crew-card {
-  border: 1px solid #1d2b34;
+  border:
+    1px solid #1d2b34;
 
   background: #0b1218;
 
   padding: 11px;
 
   display: flex;
+
   gap: 11px;
 }
 
@@ -238,11 +292,13 @@ button {
   display: grid;
   place-items: center;
 
-  border: 1px solid #2f7b78;
+  border:
+    1px solid #2f7b78;
 
   color: #5be0d2;
 
-  background: rgba(82, 214, 200, 0.07);
+  background:
+    rgba(82, 214, 200, 0.07);
 
   font-weight: 800;
 }
@@ -260,6 +316,7 @@ button {
 
 .crew-name-row strong {
   color: #edf5f7;
+
   font-size: 0.84rem;
 }
 
@@ -301,7 +358,8 @@ button {
   background: #43d6a0;
 
   box-shadow:
-    0 0 8px rgba(67, 214, 160, 0.8);
+    0 0 8px
+    rgba(67, 214, 160, 0.8);
 }
 
 .mission-card {
@@ -309,8 +367,11 @@ button {
 
   padding: 13px;
 
-  border: 1px solid #273541;
-  border-left: 3px solid #e7b65a;
+  border:
+    1px solid #273541;
+
+  border-left:
+    3px solid #e7b65a;
 
   background:
     rgba(231, 182, 90, 0.04);
@@ -363,28 +424,34 @@ button {
 
   background:
     linear-gradient(
-        rgba(31, 64, 73, 0.08) 1px,
-        transparent 1px
-      ),
+      rgba(31, 64, 73, 0.08)
+      1px,
+      transparent 1px
+    ),
     linear-gradient(
-        90deg,
-        rgba(31, 64, 73, 0.08) 1px,
-        transparent 1px
-      ),
+      90deg,
+      rgba(31, 64, 73, 0.08)
+      1px,
+      transparent 1px
+    ),
     #080e13;
 
-  background-size: 30px 30px;
+  background-size:
+    30px 30px;
 }
 
 .room {
   position: absolute;
 
-  border: 1px solid #344651;
+  border:
+    1px solid #344651;
 
-  background: rgba(17, 29, 36, 0.82);
+  background:
+    rgba(17, 29, 36, 0.82);
 
   box-shadow:
-    inset 0 0 22px rgba(0, 0, 0, 0.22);
+    inset 0 0 22px
+    rgba(0, 0, 0, 0.22);
 }
 
 .room::after {
@@ -395,7 +462,8 @@ button {
   inset: 4px;
 
   border:
-    1px solid rgba(75, 111, 123, 0.12);
+    1px solid
+    rgba(75, 111, 123, 0.12);
 
   pointer-events: none;
 }
@@ -479,7 +547,7 @@ button {
 }
 
 /* =========================
-   MAP TOKENS
+   TOKENS
 ========================= */
 
 .crew-token,
@@ -506,12 +574,17 @@ button {
 
   background: #55d5c6;
 
-  border: 2px solid #b7fff6;
+  border:
+    2px solid #b7fff6;
 
   box-shadow:
-    0 0 17px rgba(85, 213, 198, 0.35);
+    0 0 17px
+    rgba(85, 213, 198, 0.35);
 
   font-size: 0.72rem;
+
+  transition:
+    all 0.35s ease;
 }
 
 .maya-token {
@@ -539,12 +612,17 @@ button {
 
   color: #210707;
 
-  border: 2px solid #ffb0b0;
+  border:
+    2px solid #ffb0b0;
 
   box-shadow:
-    0 0 15px rgba(240, 103, 103, 0.3);
+    0 0 15px
+    rgba(240, 103, 103, 0.3);
 
   font-size: 0.65rem;
+
+  transition:
+    all 0.35s ease;
 }
 
 .guard-a {
@@ -565,7 +643,8 @@ button {
 .camera {
   padding: 4px 6px;
 
-  border: 1px solid #dda94c;
+  border:
+    1px solid #dda94c;
 
   color: #e7bc68;
 
@@ -603,7 +682,8 @@ button {
   font-size: 1.4rem;
 
   text-shadow:
-    0 0 15px rgba(255, 216, 117, 0.75);
+    0 0 15px
+    rgba(255, 216, 117, 0.75);
 }
 
 .map-legend {
@@ -648,7 +728,7 @@ button {
 }
 
 /* =========================
-   RADIO FEED
+   RADIO
 ========================= */
 
 .feed-panel {
@@ -713,13 +793,14 @@ button {
 }
 
 /* =========================
-   COMMAND BAR
+   COMMAND
 ========================= */
 
 .command-section {
   margin-top: 12px;
 
-  border: 1px solid #25343e;
+  border:
+    1px solid #25343e;
 
   background: #091017;
 
@@ -729,7 +810,8 @@ button {
 .command-label {
   display: flex;
 
-  justify-content: space-between;
+  justify-content:
+    space-between;
 
   margin-bottom: 8px;
 
@@ -746,7 +828,8 @@ button {
 
   min-height: 52px;
 
-  border: 1px solid #37515a;
+  border:
+    1px solid #37515a;
 
   background: #050a0e;
 }
@@ -780,6 +863,10 @@ button {
   color: #455963;
 }
 
+.command-form input:disabled {
+  opacity: 0.55;
+}
+
 .command-form:focus-within {
   border-color: #4fa99f;
 
@@ -795,7 +882,8 @@ button {
 
   padding: 0 17px;
 
-  border: 1px solid #4baea3;
+  border:
+    1px solid #4baea3;
 
   background:
     rgba(82, 214, 200, 0.1);
@@ -812,6 +900,11 @@ button {
 .command-form button:hover {
   background:
     rgba(82, 214, 200, 0.18);
+}
+
+.command-form button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .command-hints {
@@ -833,7 +926,8 @@ button {
 .command-hints span {
   padding: 4px 8px;
 
-  border: 1px solid #1c2b33;
+  border:
+    1px solid #1c2b33;
 
   color: #687b84;
 
@@ -860,22 +954,26 @@ button {
   background:
     rgba(2, 7, 10, 0.82);
 
-  backdrop-filter: blur(6px);
+  backdrop-filter:
+    blur(6px);
 }
 
 .mission-result {
-  width: min(520px, 100%);
+  width:
+    min(520px, 100%);
 
   padding: 32px;
 
-  border: 1px solid #314750;
+  border:
+    1px solid #314750;
 
   background: #091116;
 
   text-align: center;
 
   box-shadow:
-    0 25px 80px rgba(0, 0, 0, 0.55);
+    0 25px 80px
+    rgba(0, 0, 0, 0.55);
 }
 
 .mission-win {
@@ -917,7 +1015,8 @@ button {
 }
 
 .mission-result p {
-  margin: 16px auto 24px;
+  margin:
+    16px auto 24px;
 
   max-width: 410px;
 
@@ -977,7 +1076,8 @@ button {
 
   height: 44px;
 
-  border: 1px solid #51cfc1;
+  border:
+    1px solid #51cfc1;
 
   background:
     rgba(82, 214, 200, 0.1);
@@ -995,10 +1095,126 @@ button {
 }
 
 /* =========================
+   V1 DETECTION
+========================= */
+
+.detection-value {
+  color: #55d5c6 !important;
+}
+
+.detection-value.danger {
+  color: #ff6969 !important;
+
+  text-shadow:
+    0 0 10px
+    rgba(255, 80, 80, 0.5);
+}
+
+.detection-meter {
+  position: absolute;
+
+  z-index: 20;
+
+  top: 10px;
+  left: 4%;
+  right: 4%;
+}
+
+.detection-meter-label {
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  align-items: center;
+
+  margin-bottom: 4px;
+
+  font-size: 0.55rem;
+
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+
+  color: #627780;
+}
+
+.detection-meter-label strong {
+  color: #8499a2;
+}
+
+.detection-track {
+  width: 100%;
+
+  height: 4px;
+
+  overflow: hidden;
+
+  background:
+    rgba(255, 255, 255, 0.05);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.04);
+}
+
+.detection-fill {
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #d6a651,
+      #ff6666
+    );
+
+  transition:
+    width 0.25s ease;
+}
+
+.museum-map.danger-state {
+  box-shadow:
+    inset 0 0 35px
+    rgba(255, 55, 55, 0.11);
+}
+
+.museum-map.danger-state::after {
+  content:
+    "SECURITY DETECTION";
+
+  position: absolute;
+
+  top: 34px;
+  right: 4%;
+
+  color: #ff7171;
+
+  font-size: 0.54rem;
+
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+
+  animation:
+    detectionPulse
+    0.8s infinite alternate;
+}
+
+@keyframes detectionPulse {
+  from {
+    opacity: 0.35;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* =========================
    RESPONSIVE
 ========================= */
 
-@media (max-width: 1050px) {
+@media (max-width: 1100px) {
   .game-grid {
     grid-template-columns:
       210px 1fr;
@@ -1013,6 +1229,14 @@ button {
   .event-feed {
     max-height: 220px;
   }
+
+  .mission-stats {
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    min-width: 100px;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1021,11 +1245,17 @@ button {
   }
 
   .top-bar {
-    align-items: flex-start;
+    align-items:
+      flex-start;
 
-    flex-direction: column;
+    flex-direction:
+      column;
 
     gap: 15px;
+  }
+
+  .top-restart-button {
+    margin: 0;
   }
 
   .mission-stats {
@@ -1043,7 +1273,8 @@ button {
   .game-grid {
     display: flex;
 
-    flex-direction: column;
+    flex-direction:
+      column;
   }
 
   .museum-map {
@@ -1065,23 +1296,4 @@ button {
   .mission-result {
     padding: 24px 18px;
   }
-}
-.top-restart-button {
-  margin-left: auto;
-  margin-right: 14px;
-  height: 38px;
-  padding: 0 16px;
-
-  border: 1px solid #3c6467;
-  background: rgba(82, 214, 200, 0.06);
-  color: #7edfd5;
-
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-}
-
-.top-restart-button:hover {
-  background: rgba(82, 214, 200, 0.14);
-  border-color: #55d5c6;
 }
