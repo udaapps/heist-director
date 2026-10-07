@@ -918,3 +918,447 @@ button:disabled {
   .command-form button { margin: 6px; }
   .mission-result { padding: 24px 18px; }
 }
+
+/* =========================
+   GUIDED FIRST MISSION / ONBOARDING
+========================= */
+
+.briefing-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 7, 10, 0.9);
+  backdrop-filter: blur(8px);
+}
+
+.briefing-card {
+  width: min(720px, 100%);
+  padding: 34px;
+  border: 1px solid #35505a;
+  border-top: 3px solid #55d5c6;
+  background:
+    linear-gradient(180deg, rgba(20, 37, 43, 0.96), rgba(7, 14, 19, 0.98));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+}
+
+.briefing-kicker {
+  display: block;
+  margin-bottom: 10px;
+  color: #62d9cd;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.briefing-card h2 {
+  margin: 0;
+  color: #f5fafb;
+  font-size: clamp(1.65rem, 4vw, 2.35rem);
+  letter-spacing: 0.08em;
+}
+
+.briefing-lead {
+  max-width: 610px;
+  margin: 14px 0 20px;
+  color: #9cb0b8;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.briefing-goal {
+  padding: 14px 16px;
+  border: 1px solid #765f36;
+  border-left: 3px solid #e0b45f;
+  background: rgba(224, 180, 95, 0.06);
+}
+
+.briefing-goal span,
+.briefing-first-command span {
+  display: block;
+  margin-bottom: 5px;
+  color: #bf9652;
+  font-size: 0.59rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.briefing-goal strong {
+  color: #f0e4c9;
+  font-size: 0.86rem;
+}
+
+.briefing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+  margin: 16px 0;
+}
+
+.briefing-grid > div {
+  min-height: 70px;
+  padding: 12px 14px;
+  border: 1px solid #22343d;
+  background: #0a1319;
+}
+
+.briefing-grid strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #6ce1d5;
+  font-size: 0.66rem;
+  letter-spacing: 0.09em;
+}
+
+.briefing-grid span {
+  color: #879aa3;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.briefing-warning {
+  padding: 11px 13px;
+  border: 1px solid #513d3d;
+  background: rgba(113, 44, 44, 0.08);
+  color: #b59b9b;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.briefing-first-command {
+  margin-top: 15px;
+  padding: 13px 15px;
+  border: 1px solid #2a5553;
+  background: rgba(38, 96, 91, 0.1);
+}
+
+.briefing-first-command span {
+  color: #58bfb6;
+}
+
+.briefing-first-command code,
+.guide-command-card code {
+  display: block;
+  color: #e5fffb;
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.78rem;
+}
+
+.briefing-start {
+  width: 100%;
+  height: 48px;
+  margin-top: 16px;
+  border: 1px solid #55d5c6;
+  background: rgba(82, 214, 200, 0.12);
+  color: #7de9dd;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.briefing-start:hover {
+  background: rgba(82, 214, 200, 0.22);
+}
+
+.guided-mission-card {
+  border-left-color: #55d5c6;
+  background: rgba(82, 214, 200, 0.035);
+}
+
+.guided-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.guided-title-row .small-label {
+  margin-bottom: 0;
+  color: #66cfc5;
+}
+
+.guide-step-badge {
+  padding: 3px 6px;
+  border: 1px solid #2a5553;
+  color: #67d8cd;
+  background: rgba(82, 214, 200, 0.06);
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.objective-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.objective {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 5px 7px;
+  border: 1px solid #1e3038;
+  background: rgba(5, 11, 15, 0.42);
+}
+
+.objective > span {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #34464f;
+  color: #738790;
+  font-size: 0.59rem;
+  font-weight: 800;
+}
+
+.objective p {
+  margin: 0;
+  color: #71848d;
+  font-size: 0.65rem;
+}
+
+.objective.current {
+  border-color: #3c7772;
+  background: rgba(82, 214, 200, 0.07);
+}
+
+.objective.current > span {
+  border-color: #55d5c6;
+  color: #72e2d7;
+}
+
+.objective.current p {
+  color: #c5e6e2;
+  font-weight: 700;
+}
+
+.objective.done {
+  opacity: 0.72;
+}
+
+.objective.done > span {
+  border-color: #3d806f;
+  color: #6cdfbd;
+}
+
+.objective.done p {
+  color: #6f9a8e;
+  text-decoration: line-through;
+}
+
+.guide-command-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid #345f5b;
+  border-left: 3px solid #55d5c6;
+  background: linear-gradient(90deg, rgba(82, 214, 200, 0.09), rgba(82, 214, 200, 0.025));
+}
+
+.guide-command-copy > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #5ecbbf;
+  font-size: 0.57rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
+.guide-command-copy > strong {
+  display: block;
+  margin-bottom: 7px;
+  color: #cfdddf;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.guide-command-card code {
+  color: #8ce9df;
+}
+
+.guide-command-card > button {
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #4baea3;
+  background: rgba(82, 214, 200, 0.1);
+  color: #71e6da;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.guide-command-card > button:hover:not(:disabled) {
+  background: rgba(82, 214, 200, 0.18);
+}
+
+.guide-command-card > button:disabled {
+  opacity: 0.45;
+}
+
+@media (max-width: 760px) {
+  .briefing-card {
+    padding: 22px 17px;
+  }
+
+  .briefing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-command-card {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-command-card > button {
+    width: 100%;
+  }
+}
+
+/* =========================
+   ONBOARDING POLISH — FIT + CONTRAST
+========================= */
+
+.briefing-overlay {
+  padding: 12px;
+  overflow: hidden;
+}
+
+.briefing-card {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 24px);
+  padding: 22px 28px;
+  overflow-y: auto;
+}
+
+.briefing-kicker {
+  margin-bottom: 7px;
+  font-size: 0.61rem;
+}
+
+.briefing-card h2 {
+  font-size: clamp(1.55rem, 3.4vw, 2.1rem);
+}
+
+.briefing-lead {
+  margin: 9px 0 12px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.briefing-goal {
+  padding: 10px 13px;
+}
+
+.briefing-goal span,
+.briefing-first-command span {
+  margin-bottom: 4px;
+}
+
+.briefing-goal strong {
+  font-size: 0.82rem;
+}
+
+.briefing-grid {
+  gap: 7px;
+  margin: 11px 0;
+}
+
+.briefing-grid > div {
+  min-height: 54px;
+  padding: 9px 12px;
+}
+
+.briefing-grid strong {
+  margin-bottom: 3px;
+  font-size: 0.62rem;
+}
+
+.briefing-grid span {
+  font-size: 0.7rem;
+}
+
+.briefing-warning {
+  padding: 8px 11px;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.briefing-first-command {
+  margin-top: 10px;
+  padding: 10px 12px;
+}
+
+.briefing-first-command code {
+  display: block;
+  padding: 7px 9px;
+  border: 1px solid #2b5552;
+  border-radius: 2px;
+  background: #071116;
+  color: #b9fff7;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.briefing-start {
+  height: 42px;
+  margin-top: 10px;
+  color: #9af3e9;
+  background: rgba(82, 214, 200, 0.14);
+}
+
+@media (max-height: 760px) {
+  .briefing-card {
+    padding: 16px 22px;
+  }
+
+  .briefing-lead {
+    margin: 6px 0 9px;
+    line-height: 1.4;
+  }
+
+  .briefing-grid {
+    margin: 8px 0;
+  }
+
+  .briefing-grid > div {
+    min-height: 46px;
+    padding: 7px 10px;
+  }
+
+  .briefing-warning {
+    padding: 7px 10px;
+  }
+
+  .briefing-first-command {
+    margin-top: 8px;
+    padding: 8px 10px;
+  }
+
+  .briefing-start {
+    height: 40px;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  .briefing-card {
+    padding: 18px 16px;
+  }
+
+  .briefing-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -121,6 +121,7 @@ function App() {
   const [missionRun, setMissionRun] = useState(0);
   const [interpreting, setInterpreting] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [showBriefing, setShowBriefing] = useState(true);
 
   // V1 #3 game-feel state
   const [routePreview, setRoutePreview] = useState<Room[]>([]);
@@ -137,6 +138,7 @@ function App() {
   const eventFeedRef = useRef<HTMLDivElement | null>(null);
   const pausedRef = useRef(false);
   const interpretingRef = useRef(false);
+  const showBriefingRef = useRef(true);
   const guardStepRef = useRef<Record<GuardName, number>>({ g1: 0, g2: 0, g3: 0 });
   const complicationTriggeredRef = useRef(false);
   const complicationHideTimerRef = useRef<number | null>(null);
@@ -170,6 +172,10 @@ function App() {
   }, [interpreting]);
 
   useEffect(() => {
+    showBriefingRef.current = showBriefing;
+  }, [showBriefing]);
+
+  useEffect(() => {
     const panel = eventFeedRef.current;
     if (!panel) return;
     panel.scrollTop = panel.scrollHeight;
@@ -195,7 +201,12 @@ function App() {
   }
 
   function simulationBlocked() {
-    return pausedRef.current || interpretingRef.current || gameStatusRef.current !== "active";
+    return (
+      showBriefingRef.current ||
+      pausedRef.current ||
+      interpretingRef.current ||
+      gameStatusRef.current !== "active"
+    );
   }
 
   // TIMER
@@ -218,9 +229,12 @@ function App() {
   }, [missionRun]);
 
   // LIVE GUARD PATROL
+  // Guided tutorial rule: guards stay frozen through Steps 1-3.
+  // Full patrol begins only after the Orion Diamond is secured (Step 4).
   useEffect(() => {
     const interval = window.setInterval(() => {
       if (simulationBlocked()) return;
+      if (!targetSecuredRef.current) return;
 
       const next = { ...guardRoomsRef.current };
 
@@ -238,9 +252,20 @@ function App() {
   }, [missionRun]);
 
   // DETECTION SYSTEM
+  // Steps 1-3 are a learning phase: no guard detection can end the tutorial.
+  // Detection becomes live after the diamond is secured for the escape phase.
   useEffect(() => {
     const interval = window.setInterval(() => {
       if (simulationBlocked()) return;
+
+      if (!targetSecuredRef.current) {
+        if (detectionRef.current !== 0) {
+          detectionRef.current = 0;
+          setDetection(0);
+        }
+        threatGuardRef.current = null;
+        return;
+      }
 
       const mayaRoom = mayaRoomRef.current;
       const guardEntry = (Object.entries(guardRoomsRef.current) as [GuardName, Room][]).find(
@@ -293,25 +318,30 @@ function App() {
   }, [missionRun]);
 
   // ALERT FAILURE
+  // The guided learning phase cannot fail from alert. Failure rules turn on
+  // after the diamond is secured and the player starts the escape phase.
   useEffect(() => {
+    if (!targetSecured) return;
     if (alert < 100 || gameStatus !== "active") return;
     gameStatusRef.current = "lost";
     setGameStatus("lost");
-  }, [alert, gameStatus]);
+  }, [alert, gameStatus, targetSecured]);
 
   // V1 #3 RANDOM COMPLICATION — once per mission after 35 active seconds
   useEffect(() => {
     if (
+      showBriefing ||
       gameStatus !== "active" ||
+      !targetSecured ||
       complicationTriggeredRef.current ||
-      timeLeft > 865
+      timeLeft > 830
     ) {
       return;
     }
 
     complicationTriggeredRef.current = true;
     triggerRandomComplication();
-  }, [timeLeft, gameStatus]);
+  }, [timeLeft, gameStatus, targetSecured, showBriefing]);
 
   function showComplication(message: string) {
     setComplication(message);
@@ -581,6 +611,9 @@ function App() {
     targetSecuredRef.current = true;
     setTargetSecured(true);
 
+    // Step 3 complete: switch from the safe tutorial phase to the live escape phase.
+    addFeed("SYSTEM", "Diamond secured. Tutorial phase complete — live security is now active. Reach the EXIT.");
+
     if (cameraOnRef.current[3]) {
       setAlert((current) => Math.min(100, current + 25));
       addFeed(
@@ -776,6 +809,8 @@ function App() {
     setPaused(false);
     interpretingRef.current = false;
     setInterpreting(false);
+    showBriefingRef.current = true;
+    setShowBriefing(true);
 
     setAlert(18);
     setTimeLeft(900);
@@ -792,8 +827,17 @@ function App() {
     setMissionRun((current) => current + 1);
   }
 
+  function startMission() {
+    showBriefingRef.current = false;
+    setShowBriefing(false);
+    addFeed(
+      "SYSTEM",
+      "Director online. Follow the guided objectives. You can phrase commands naturally.",
+    );
+  }
+
   function togglePause() {
-    if (gameStatusRef.current !== "active" || interpreting) return;
+    if (showBriefing || gameStatusRef.current !== "active" || interpreting) return;
 
     // Do not put side effects inside a React state updater. In development
     // Strict Mode may call updater functions twice, which duplicated radio logs.
@@ -847,6 +891,36 @@ function App() {
     );
   }
 
+  const vaultCameraDisabled = !cameraOn[3];
+  const mayaReachedVault = crewRooms.maya === "secure-room" || targetSecured;
+  const missionExtracted = gameStatus === "won";
+
+  const guideStep = !vaultCameraDisabled
+    ? 1
+    : !mayaReachedVault
+      ? 2
+      : !targetSecured
+        ? 3
+        : 4;
+
+  const nextGuideCommand =
+    guideStep === 1
+      ? "Kai disable the vault camera"
+      : guideStep === 2
+        ? "Maya take the safest route to the vault"
+        : guideStep === 3
+          ? "Maya grab the diamond"
+          : "Maya take the safest route to the exit";
+
+  const nextGuideText =
+    guideStep === 1
+      ? "First, make the vault safer by taking Camera 3 offline."
+      : guideStep === 2
+        ? "Now guide Maya to the Secure Room without walking into a guard."
+        : guideStep === 3
+          ? "Maya is at the vault. Secure the Orion Diamond."
+          : "You have the diamond. Get Maya to the EXIT to finish the mission.";
+
   const appClasses = [
     "app-shell",
     alert >= 70 ? "high-alert" : "",
@@ -858,6 +932,57 @@ function App() {
 
   return (
     <main className={appClasses}>
+      {showBriefing && gameStatus === "active" && (
+        <div className="briefing-overlay">
+          <div className="briefing-card">
+            <span className="briefing-kicker">OPERATION: SILENT GALLERY</span>
+            <h2>YOU ARE THE DIRECTOR</h2>
+            <p className="briefing-lead">
+              You do not control Maya with WASD. Type natural-language orders to your crew and
+              guide the heist from the command desk.
+            </p>
+
+            <div className="briefing-goal">
+              <span>MISSION</span>
+              <strong>Steal the Orion Diamond and get Maya to the EXIT.</strong>
+            </div>
+
+            <div className="briefing-grid">
+              <div>
+                <strong>1 · KAI</strong>
+                <span>Disable cameras</span>
+              </div>
+              <div>
+                <strong>2 · MAYA</strong>
+                <span>Move safely through the museum</span>
+              </div>
+              <div>
+                <strong>3 · MAYA</strong>
+                <span>Grab the diamond</span>
+              </div>
+              <div>
+                <strong>4 · REX / MAYA</strong>
+                <span>Prepare and reach extraction</span>
+              </div>
+            </div>
+
+            <div className="briefing-warning">
+              Guards patrol live. If DETECTION reaches 100%, the mission fails. Maya can refuse
+              reckless orders when a room is clearly guarded.
+            </div>
+
+            <div className="briefing-first-command">
+              <span>YOUR FIRST COMMAND</span>
+              <code>Kai disable the vault camera</code>
+            </div>
+
+            <button className="briefing-start" onClick={startMission}>
+              START MISSION
+            </button>
+          </div>
+        </div>
+      )}
+
       {gameStatus !== "active" && (
         <div className="mission-overlay">
           <div className={`mission-result ${gameStatus === "won" ? "mission-win" : "mission-loss"}`}>
@@ -890,7 +1015,7 @@ function App() {
         </div>
 
         <div className="top-actions">
-          <button className="top-pause-button" onClick={togglePause} disabled={interpreting}>
+          <button className="top-pause-button" onClick={togglePause} disabled={interpreting || showBriefing}>
             {paused ? "RESUME" : "PAUSE"}
           </button>
           <button className="top-restart-button" onClick={restartMission}>RESTART</button>
@@ -942,13 +1067,31 @@ function App() {
               </div>
             </article>
           </div>
-          <div className="mission-card">
-            <span className="small-label">PRIMARY OBJECTIVE</span>
+          <div className="mission-card guided-mission-card">
+            <div className="guided-title-row">
+              <span className="small-label">GUIDED FIRST MISSION</span>
+              <span className="guide-step-badge">STEP {guideStep} / 4</span>
+            </div>
             <strong>Recover Orion Diamond</strong>
-            <p>
-              Guards patrol live. Detection rises under direct contact. Safe routes glow on the map,
-              and one unexpected security complication can occur during the mission.
-            </p>
+
+            <div className="objective-list">
+              <div className={vaultCameraDisabled ? "objective done" : guideStep === 1 ? "objective current" : "objective"}>
+                <span>{vaultCameraDisabled ? "✓" : "1"}</span>
+                <p>Disable vault camera</p>
+              </div>
+              <div className={mayaReachedVault ? "objective done" : guideStep === 2 ? "objective current" : "objective"}>
+                <span>{mayaReachedVault ? "✓" : "2"}</span>
+                <p>Get Maya to Secure Room</p>
+              </div>
+              <div className={targetSecured ? "objective done" : guideStep === 3 ? "objective current" : "objective"}>
+                <span>{targetSecured ? "✓" : "3"}</span>
+                <p>Secure Orion Diamond</p>
+              </div>
+              <div className={missionExtracted ? "objective done" : guideStep === 4 ? "objective current" : "objective"}>
+                <span>{missionExtracted ? "✓" : "4"}</span>
+                <p>Reach EXIT</p>
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -1048,6 +1191,21 @@ function App() {
       </section>
 
       <section className="command-section">
+        <div className="guide-command-card">
+          <div className="guide-command-copy">
+            <span>NEXT OBJECTIVE · STEP {guideStep} OF 4</span>
+            <strong>{nextGuideText}</strong>
+            <code>{nextGuideCommand}</code>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCommand(nextGuideCommand)}
+            disabled={paused || interpreting || gameStatus !== "active"}
+          >
+            LOAD COMMAND
+          </button>
+        </div>
+
         <div className="command-label">
           <span>DIRECTOR COMMAND</span>
           <span>
